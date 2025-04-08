@@ -1,0 +1,38 @@
+# Start with a uv-based Python image that already includes uv + Python 3.12 on Debian Bookworm
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS builder
+
+# We might want to compile bytecode for a slight performance boost
+ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
+
+# We'll keep everything in /app
+WORKDIR /app
+
+# Copy in the minimum needed to install dependencies (pyproject.toml, uv.lock if you have one)
+# to cache the steps. If you have a uv.lock, copy it as well.
+COPY pyproject.toml ./
+# If you have a uv.lock, do:
+# COPY uv.lock uv.lock
+
+# Use uv to install dependencies without installing the entire project
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-install-project
+
+# Now add all the source code
+ADD . /app
+
+# Install the project code fully
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen
+
+# Expose location for ephemeral data
+# We'll store data in /app/data, do not attach volumes if ephemeral is ok
+RUN mkdir -p /app/data
+
+# Set PATH so that the Dagster CLI is available
+ENV PATH="/app/.venv/bin:$PATH"
+
+# Expose port 4000 for gRPC
+EXPOSE 4000
+
+# Finally, run the user code's gRPC server
+CMD ["dagster", "api", "grpc", "-h", "0.0.0.0", "-p", "4000", "-m", "pipeline.definitions"]

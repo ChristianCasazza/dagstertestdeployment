@@ -1,0 +1,22 @@
+storage:
+  sqlite:
+    base_dir: "."
+run_coordinator:
+  module: dagster.core.run_coordinator
+  class: QueuedRunCoordinator
+  config:
+    max_concurrent_runs: 5
+
+run_launcher:
+  module: dagster_docker
+  class: DockerRunLauncher
+  config:
+    env_vars:
+      - WAREHOUSE_PATH
+      - DAGSTER_HOME
+      - SOCRATA_API_TOKEN
+    container_kwargs:
+      # no volumes needed if ephemeral, but if you need Docker in Docker for ephemeral containers:
+      volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+    network: "pipeline_net"

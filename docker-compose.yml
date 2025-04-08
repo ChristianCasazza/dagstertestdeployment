@@ -1,0 +1,72 @@
+version: "3.9"
+
+services:
+  user_code:
+    build:
+      context: .
+      dockerfile: Dockerfile_user_code
+    container_name: user_code
+    # Optionally set container_name for clarity
+    environment:
+      # We'll define these inline or via a .env
+      DAGSTER_HOME: "/app/dagster_home"
+      LAKE_PATH: "/app/data/lake"
+      WAREHOUSE_PATH: "/app/data/data.duckdb"
+      SOCRATA_API_TOKEN: "${SOCRATA_API_TOKEN}"
+      # If using DockerRunLauncher ephemeral containers:
+      DAGSTER_CURRENT_IMAGE: "user_code:latest"
+    expose:
+      - "4000"
+    networks:
+      - pipeline_net
+
+  dagster_webserver:
+    build:
+      context: .
+      dockerfile: Dockerfile_dagster
+    container_name: dagster_webserver
+    entrypoint: 
+      - dagster-webserver
+      - "-w"
+      - "/app/dagster_home/workspace.yaml"
+      - "-h"
+      - "0.0.0.0"
+      - "-p"
+      - "3000"
+    environment:
+      DAGSTER_HOME: "/app/dagster_home"
+      LAKE_PATH: "/app/data/lake"
+      WAREHOUSE_PATH: "/app/data/data.duckdb"
+      SOCRATA_API_TOKEN: "${SOCRATA_API_TOKEN}"
+    ports:
+      - "3000:3000"
+    networks:
+      - pipeline_net
+    depends_on:
+      - user_code
+
+  dagster_daemon:
+    build:
+      context: .
+      dockerfile: Dockerfile_dagster
+    container_name: dagster_daemon
+    entrypoint:
+      - dagster-daemon
+      - "run"
+    environment:
+      DAGSTER_HOME: "/app/dagster_home"
+      LAKE_PATH: "/app/data/lake"
+      WAREHOUSE_PATH: "/app/data/data.duckdb"
+      SOCRATA_API_TOKEN: "${SOCRATA_API_TOKEN}"
+
+      # The DockerRunLauncher usually needs access to the Docker socket
+      # to spin up ephemeral containers:
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - pipeline_net
+    depends_on:
+      - user_code
+
+networks:
+  pipeline_net:
