@@ -5,9 +5,9 @@ from pipeline.assets.ingestion import mta_assets, weather_assets #Our ingestion 
 from pipeline.assets.warehouse import duckdb_warehouse #Our code for making a DuckDB warehouse from parquet files
 
 # Our DBT imports
-from dagster_dbt import DbtCliResource #Our Dagster-DBT Resource 
-from pipeline.assets.dbt_assets import dbt_project_assets  # Our DBT assets
-from pipeline.assets.dbt_assets import dbt_project #Tells Dagster where it can find our DBT code relative to this file
+#from dagster_dbt import DbtCliResource #Our Dagster-DBT Resource 
+#from pipeline.assets.dbt_assets import dbt_project_assets  # Our DBT assets
+#from pipeline.assets.dbt_assets import dbt_project #Tells Dagster where it can find our DBT code relative to this file
 
 from pipeline.constants import LAKE_PATH  #The base path for our data lake of parquet files
 
@@ -31,7 +31,7 @@ duckdb_warehouse = load_assets_from_modules([duckdb_warehouse])
 # Create the Socrata resource
 socrata = SocrataResource()  # Using default env var for the token
 
-dbt=DbtCliResource(project_dir=dbt_project.project_dir)
+#dbt=DbtCliResource(project_dir=dbt_project.project_dir)
 
 
 
@@ -47,7 +47,7 @@ fastopendata_partitioned_parquet_io_manager = FastOpenDataPartitionedParquetIOMa
 
 # Then, bundle all of them into resources
 resources = {
-    "dbt": dbt,  # Updated DBT resource reference
+    #"dbt": dbt,  # Updated DBT resource reference
     "single_file_polars_parquet_io_manager": single_file_polars_parquert_io_manager, # The first io_manager matches the key assigned on all the assets in assets/ingestion. 
     "fastopendata_partitioned_parquet_io_manager": fastopendata_partitioned_parquet_io_manager,
     "socrata": socrata,
@@ -56,6 +56,6 @@ resources = {
 
 # Define the Dagster assets taking part in our data platform, and the resources they can use
 defs = Definitions(
-    assets=mta_assets + weather_assets + duckdb_warehouse + [dbt_project_assets],  # Include all MTA and DBT assets
+    assets=mta_assets + weather_assets + duckdb_warehouse, #+ [dbt_project_assets],  # Include all MTA and DBT assets
     resources=resources
 )

@@ -8,7 +8,7 @@ from pipeline.datasets import *
 
 
 # Define the base path relative to the location where we will keep our data lake of parquet files.
-LAKE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data", "opendata"))
+LAKE_PATH = os.getenv("LAKE_PATH")
 
 # Base path to store our DuckDB. We store this DuckDB file in its own spot in data
 WAREHOUSE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "app", "sources", "app", "data.duckdb"))

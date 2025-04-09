@@ -1,18 +1,21 @@
 # Dockerfile_user_code
+
 FROM python:3.10-slim
 
-# Install packages needed for your user code
-RUN pip install \
-    dagster \
-    dagster-postgres \
-    dagster-docker
-
-# Copy your user code
+# Set working directory to where the project will live
 WORKDIR /opt/dagster/app
-COPY pipeline/ /opt/dagster/app
 
-# Expose port 4000 for the code server
+# Copy the entire repository into the container
+COPY . /opt/dagster/app
+
+# Install project dependencies and your package in editable mode
+RUN pip install --no-cache-dir -e .
+
+# (Optional) Set PYTHONPATH to ensure the module can be found (if needed)
+ENV PYTHONPATH="/opt/dagster/app"
+
+# Expose the port for the code server (gRPC API)
 EXPOSE 4000
 
-# By default, run the code server
-CMD ["dagster", "code-server", "start", "-h", "0.0.0.0", "-p", "4000", "-f", "definitions.py"]
+# Start the Dagster code server; note we use the -m argument to run the module
+CMD ["dagster", "code-server", "start", "-h", "0.0.0.0", "-p", "4000", "-m", "pipeline.definitions"]
