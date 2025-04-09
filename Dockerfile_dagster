@@ -1,24 +1,19 @@
-FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+# Dockerfile_dagster
+FROM python:3.10-slim
 
-WORKDIR /app
+# Install needed packages for webserver + daemon
+RUN pip install \
+    dagster \
+    dagster-graphql \
+    dagster-webserver \
+    dagster-postgres \
+    dagster-docker
 
-# Ensure we have a minimal set of dependencies for dagster
-# If your pyproject includes them, we can just do a partial approach
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv pip install dagster dagster-webserver
+# Set $DAGSTER_HOME and copy dagster.yaml + workspace.yaml
+ENV DAGSTER_HOME=/opt/dagster/dagster_home
+RUN mkdir -p $DAGSTER_HOME
 
-# If you want to manage them with pyproject, you can also do:
-# COPY pyproject.toml ./
-# RUN uv sync --frozen --no-install-project  # minimal dagster environment
+COPY dagster.yaml workspace.yaml $DAGSTER_HOME
 
-# Copy your ephemeral dagster.yaml and workspace.yaml
-# We'll store them in /app/dagster_home
-RUN mkdir -p /app/dagster_home
-COPY dagster.yaml /app/dagster_home/
-COPY workspace.yaml /app/dagster_home/
-
-ENV DAGSTER_HOME=/app/dagster_home
-ENV PATH="/app/.venv/bin:$PATH"
-
-# We'll not set CMD here because we'll set it in docker-compose
-EXPOSE 3000
+# Use /opt/dagster/dagster_home as the working dir
+WORKDIR $DAGSTER_HOME

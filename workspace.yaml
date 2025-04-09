@@ -1,5 +1,6 @@
+# workspace.yaml
 load_from:
   - grpc_server:
-      host: user_code
+      host: docker_example_user_code
       port: 4000
-      location_name: "pipeline_user_code"
+      location_name: "my_code_location"
